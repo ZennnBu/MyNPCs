@@ -52,11 +52,13 @@ public class NPCManager {
             copyName = sourceName + "_copy" + number++;
         }
 
+        final String finalCopyName = copyName;
+
         Mannequin copy = player.getWorld().spawn(
             player.getLocation(),
             Mannequin.class,
             mannequin -> {
-                mannequin.setCustomName(copyName);
+                mannequin.setCustomName(finalCopyName);
                 mannequin.setCustomNameVisible(true);
                 mannequin.setInvulnerable(source.isInvulnerable());
                 mannequin.setImmovable(source.isImmovable());
@@ -71,8 +73,8 @@ public class NPCManager {
             }
         );
 
-        npcs.put(copyName.toLowerCase(), copy);
-        return copyName;
+        npcs.put(finalCopyName.toLowerCase(), copy);
+        return finalCopyName;
     }
 
     public boolean lookMe(Player player, String name) {
