@@ -1,11 +1,15 @@
 
 package com.mynpcs;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +17,7 @@ import java.util.Map;
 public class NPCManager {
 
     private final Map<String, Mannequin> npcs = new HashMap<>();
+    private final Map<String, Team> glowTeams = new HashMap<>();
 
     public Mannequin createNPC(Player player, String name) {
         if (exists(name)) return null;
@@ -37,6 +42,7 @@ public class NPCManager {
 
     public String copyNPC(Player player, String sourceName) {
         Mannequin source = getNPC(sourceName);
+
         if (source == null || !source.isValid()) return null;
 
         String copyName = sourceName + "_copy";
@@ -58,7 +64,10 @@ public class NPCManager {
                 mannequin.setPersistent(true);
                 mannequin.setProfile(source.getProfile());
 
-                copyEquipment(source.getEquipment(), mannequin.getEquipment());
+                copyEquipment(
+                    source.getEquipment(),
+                    mannequin.getEquipment()
+                );
             }
         );
 
@@ -68,11 +77,14 @@ public class NPCManager {
 
     public boolean lookMe(Player player, String name) {
         Mannequin npc = getNPC(name);
+
         if (npc == null || !npc.isValid()) return false;
 
         Location direction = npc.getLocation();
+
         direction.setDirection(
-            player.getLocation().toVector().subtract(direction.toVector())
+            player.getLocation().toVector()
+                .subtract(direction.toVector())
         );
 
         npc.teleport(direction);
@@ -94,7 +106,58 @@ public class NPCManager {
         return true;
     }
 
-    private void copyEquipment(EntityEquipment source, EntityEquipment target) {
+    public boolean addGlow(String name, String colorName) {
+        Mannequin npc = getNPC(name);
+
+        if (npc == null || !npc.isValid()) return false;
+
+        ChatColor color = switch (colorName.toUpperCase()) {
+            case "YELLOW" -> ChatColor.YELLOW;
+            case "BLACK" -> ChatColor.BLACK;
+            case "WHITE" -> ChatColor.WHITE;
+            case "PURPLE" -> ChatColor.LIGHT_PURPLE;
+            case "RED" -> ChatColor.RED;
+            case "GREEN", "LIME" -> ChatColor.GREEN;
+            case "BLUE" -> ChatColor.BLUE;
+            case "AQUA" -> ChatColor.AQUA;
+            case "CYAN" -> ChatColor.DARK_AQUA;
+            default -> null;
+        };
+
+        if (color == null) return false;
+
+        Scoreboard scoreboard = Bukkit.getScoreboardManager()
+            .getMainScoreboard();
+
+        String teamName = "mn" +
+            npc.getUniqueId().toString().replace("-", "").substring(0, 14);
+
+        Team oldTeam = glowTeams.get(name.toLowerCase());
+
+        if (oldTeam != null) {
+            oldTeam.unregister();
+        }
+
+        Team team = scoreboard.getTeam(teamName);
+
+        if (team == null) {
+            team = scoreboard.registerNewTeam(teamName);
+        }
+
+        team.setColor(color);
+        team.addEntity(npc);
+
+        npc.setGlowing(true);
+
+        glowTeams.put(name.toLowerCase(), team);
+
+        return true;
+    }
+
+    private void copyEquipment(
+        EntityEquipment source,
+        EntityEquipment target
+    ) {
         if (source == null || target == null) return;
 
         target.setArmorContents(cloneItems(source.getArmorContents()));
