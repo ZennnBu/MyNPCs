@@ -1,6 +1,8 @@
 
 package com.mynpcs;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
@@ -8,7 +10,6 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
-import org.bukkit.ChatColor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,6 @@ import java.util.Map;
 public class NPCManager {
 
     private final Map<String, Mannequin> npcs = new HashMap<>();
-
     private final Map<String, Team> glowTeams = new HashMap<>();
 
     public Mannequin createNPC(Player player, String name) {
@@ -42,6 +42,7 @@ public class NPCManager {
 
     public String copyNPC(Player player, String sourceName) {
         Mannequin source = getNPC(sourceName);
+
         if (source == null || !source.isValid()) return null;
 
         String copyName = sourceName + "_copy";
@@ -63,7 +64,10 @@ public class NPCManager {
                 mannequin.setPersistent(true);
                 mannequin.setProfile(source.getProfile());
 
-                copyEquipment(source.getEquipment(), mannequin.getEquipment());
+                copyEquipment(
+                    source.getEquipment(),
+                    mannequin.getEquipment()
+                );
             }
         );
 
@@ -73,11 +77,14 @@ public class NPCManager {
 
     public boolean lookMe(Player player, String name) {
         Mannequin npc = getNPC(name);
+
         if (npc == null || !npc.isValid()) return false;
 
         Location direction = npc.getLocation();
+
         direction.setDirection(
-            player.getLocation().toVector().subtract(direction.toVector())
+            player.getLocation().toVector()
+                .subtract(direction.toVector())
         );
 
         npc.teleport(direction);
@@ -87,12 +94,20 @@ public class NPCManager {
     public boolean renameNPC(String oldName, String newName) {
         Mannequin npc = getNPC(oldName);
 
-        if (npc == null || !npc.isValid() || exists(newName)) return false;
+        if (npc == null || !npc.isValid() || exists(newName)) {
+            return false;
+        }
 
         npcs.remove(oldName.toLowerCase());
         npc.setCustomName(newName);
         npc.setCustomNameVisible(true);
         npcs.put(newName.toLowerCase(), npc);
+
+        Team oldTeam = glowTeams.remove(oldName.toLowerCase());
+
+        if (oldTeam != null) {
+            oldTeam.unregister();
+        }
 
         return true;
     }
@@ -105,38 +120,54 @@ public class NPCManager {
         ChatColor color;
 
         try {
-            color = ChatColor.valueOf(colorName.toUpperCase());
-        } catch (IllegalArgumentException exception) {
+            color = switch (colorName.toUpperCase()) {
+                case "YELLOW" -> ChatColor.YELLOW;
+                case "BLACK" -> ChatColor.BLACK;
+                case "WHITE" -> ChatColor.WHITE;
+                case "PURPLE" -> ChatColor.LIGHT_PURPLE;
+                case "RED" -> ChatColor.RED;
+                case "GREEN", "LIME" -> ChatColor.GREEN;
+                case "BLUE" -> ChatColor.BLUE;
+                case "AQUA" -> ChatColor.AQUA;
+                case "CYAN" -> ChatColor.DARK_AQUA;
+                default -> null;
+            };
+        } catch (Exception exception) {
             return false;
         }
 
-        Scoreboard scoreboard = npc.getScoreboard();
-        if (scoreboard == null) return false;
+        if (color == null) return false;
 
-        String teamName = "mynpc_" + name.toLowerCase();
+        Scoreboard scoreboard = Bukkit.getScoreboardManager()
+            .getMainScoreboard();
 
-        Team oldTeam = scoreboard.getTeam(teamName);
+        String teamName = "mn" +
+            npc.getUniqueId().toString().replace("-", "").substring(0, 14);
 
-        if (oldTeam != null) {
-            oldTeam.unregister();
+        Team team = scoreboard.getTeam(teamName);
+
+        if (team == null) {
+            team = scoreboard.registerNewTeam(teamName);
         }
 
-        Team team = scoreboard.registerNewTeam(teamName);
-        team.setColor(color);
-        team.setOption(
-            Team.Option.NAME_TAG_VISIBILITY,
-            Team.OptionStatus.ALWAYS
-        );
+        Team previousTeam = glowTeams.put(name.toLowerCase(), team);
 
+        if (previousTeam != null && previousTeam != team) {
+            previousTeam.unregister();
+        }
+
+        team.setColor(color);
         team.addEntry(npc.getUniqueId().toString());
 
         npc.setGlowing(true);
-        glowTeams.put(name.toLowerCase(), team);
 
         return true;
     }
 
-    private void copyEquipment(EntityEquipment source, EntityEquipment target) {
+    private void copyEquipment(
+        EntityEquipment source,
+        EntityEquipment target
+    ) {
         if (source == null || target == null) return;
 
         target.setArmorContents(cloneItems(source.getArmorContents()));
