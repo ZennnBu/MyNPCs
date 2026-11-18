@@ -1,0 +1,12 @@
+name: MyNPCs
+version: 1.0.0
+main: com.mynpcs.MyNPCs
+api-version: '26.2'
+author: MyNPCs
+description: Advanced NPC Management Plugin
+
+commands:
+  npc:
+    description: Main NPC command
+    usage: /npc
+    aliases: [npcs]
