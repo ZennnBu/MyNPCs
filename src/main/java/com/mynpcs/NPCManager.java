@@ -117,24 +117,18 @@ public class NPCManager {
 
         if (npc == null || !npc.isValid()) return false;
 
-        ChatColor color;
-
-        try {
-            color = switch (colorName.toUpperCase()) {
-                case "YELLOW" -> ChatColor.YELLOW;
-                case "BLACK" -> ChatColor.BLACK;
-                case "WHITE" -> ChatColor.WHITE;
-                case "PURPLE" -> ChatColor.LIGHT_PURPLE;
-                case "RED" -> ChatColor.RED;
-                case "GREEN", "LIME" -> ChatColor.GREEN;
-                case "BLUE" -> ChatColor.BLUE;
-                case "AQUA" -> ChatColor.AQUA;
-                case "CYAN" -> ChatColor.DARK_AQUA;
-                default -> null;
-            };
-        } catch (Exception exception) {
-            return false;
-        }
+        ChatColor color = switch (colorName.toUpperCase()) {
+            case "YELLOW" -> ChatColor.YELLOW;
+            case "BLACK" -> ChatColor.BLACK;
+            case "WHITE" -> ChatColor.WHITE;
+            case "PURPLE" -> ChatColor.LIGHT_PURPLE;
+            case "RED" -> ChatColor.RED;
+            case "GREEN", "LIME" -> ChatColor.GREEN;
+            case "BLUE" -> ChatColor.BLUE;
+            case "AQUA" -> ChatColor.AQUA;
+            case "CYAN" -> ChatColor.DARK_AQUA;
+            default -> null;
+        };
 
         if (color == null) return false;
 
