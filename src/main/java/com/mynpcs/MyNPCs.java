@@ -14,12 +14,13 @@ public final class MyNPCs extends JavaPlugin {
 
         npcManager = new NPCManager();
 
+        NPCCommand npcCommand = new NPCCommand(npcManager);
+
         if (getCommand("npc") != null) {
-            getCommand("npc").setExecutor(
-                new NPCCommand(npcManager)
-            );
+            getCommand("npc").setExecutor(npcCommand);
+            getCommand("npc").setTabCompleter(npcCommand);
         } else {
-            getLogger().severe("NPC command not found in plugin.yml!");
+            getLogger().severe("NPC command missing!");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -29,11 +30,6 @@ public final class MyNPCs extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
-        if (npcManager != null) {
-            npcManager.getNPCs().clear();
-        }
-
         getLogger().info("MyNPCs disabled!");
     }
 
