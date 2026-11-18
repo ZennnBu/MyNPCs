@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class MyNPCs extends JavaPlugin {
 
     private NPCManager npcManager;
+    private NPCSkinManager skinManager;
 
     @Override
     public void onEnable() {
@@ -13,8 +14,12 @@ public final class MyNPCs extends JavaPlugin {
         getLogger().info("Starting MyNPCs...");
 
         npcManager = new NPCManager();
+        skinManager = new NPCSkinManager(this, npcManager);
 
-        NPCCommand npcCommand = new NPCCommand(npcManager);
+        NPCCommand npcCommand = new NPCCommand(
+            npcManager,
+            skinManager
+        );
 
         if (getCommand("npc") != null) {
             getCommand("npc").setExecutor(npcCommand);
@@ -35,5 +40,9 @@ public final class MyNPCs extends JavaPlugin {
 
     public NPCManager getNPCManager() {
         return npcManager;
+    }
+
+    public NPCSkinManager getSkinManager() {
+        return skinManager;
     }
 }
