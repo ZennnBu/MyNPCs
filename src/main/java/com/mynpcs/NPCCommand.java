@@ -18,12 +18,8 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public boolean onCommand(
-        CommandSender sender,
-        Command command,
-        String label,
-        String[] args
-    ) {
+    public boolean onCommand(CommandSender sender, Command command,
+                             String label, String[] args) {
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Only players can use this command.");
@@ -41,19 +37,13 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args[0].equalsIgnoreCase("create")) {
-
             if (args.length < 2) {
                 player.sendMessage(ChatColor.RED + "Usage: /npc create <name>");
                 return true;
             }
 
-            if (npcManager.exists(args[1])) {
-                player.sendMessage(ChatColor.RED + "NPC already exists!");
-                return true;
-            }
-
             if (npcManager.createNPC(player, args[1]) == null) {
-                player.sendMessage(ChatColor.RED + "Creation failed!");
+                player.sendMessage(ChatColor.RED + "NPC already exists!");
                 return true;
             }
 
@@ -62,7 +52,6 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args[0].equalsIgnoreCase("movehere")) {
-
             if (args.length < 2) {
                 player.sendMessage(ChatColor.RED + "Usage: /npc movehere <name>");
                 return true;
@@ -81,7 +70,6 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args[0].equalsIgnoreCase("copy")) {
-
             if (args.length < 2) {
                 player.sendMessage(ChatColor.RED + "Usage: /npc copy <name>");
                 return true;
@@ -99,7 +87,6 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args[0].equalsIgnoreCase("lookme")) {
-
             if (args.length < 2) {
                 player.sendMessage(ChatColor.RED + "Usage: /npc lookme <name>");
                 return true;
@@ -114,44 +101,60 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("rename")) {
+            if (args.length < 3) {
+                player.sendMessage(
+                    ChatColor.RED + "Usage: /npc rename <old> <new>"
+                );
+                return true;
+            }
+
+            if (!npcManager.renameNPC(args[1], args[2])) {
+                player.sendMessage(
+                    ChatColor.RED + "NPC not found or new name already exists!"
+                );
+                return true;
+            }
+
+            player.sendMessage(
+                ChatColor.GREEN + "NPC renamed to " + args[2]
+            );
+            return true;
+        }
+
         sendHelp(player);
         return true;
     }
 
     private void sendHelp(Player player) {
-
         player.sendMessage(ChatColor.DARK_PURPLE + "====== MyNPCs ======");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc create <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc movehere <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc copy <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc lookme <name>");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc rename <old> <new>");
         player.sendMessage(ChatColor.DARK_PURPLE + "===================");
     }
 
     @Override
-    public List<String> onTabComplete(
-        CommandSender sender,
-        Command command,
-        String alias,
-        String[] args
-    ) {
+    public List<String> onTabComplete(CommandSender sender,
+                                      Command command, String alias,
+                                      String[] args) {
 
         if (args.length == 1) {
             return StringUtil.copyPartialMatches(
                 args[0],
-                Arrays.asList("create", "movehere", "copy", "lookme"),
+                Arrays.asList("create", "movehere", "copy", "lookme", "rename"),
                 new ArrayList<>()
             );
         }
 
         if (args.length == 2 &&
-            Arrays.asList("movehere", "copy", "lookme")
+            Arrays.asList("movehere", "copy", "lookme", "rename")
                 .contains(args[0].toLowerCase())) {
 
             return StringUtil.copyPartialMatches(
-                args[1],
-                npcManager.getNPCs().keySet(),
-                new ArrayList<>()
+                args[1], npcManager.getNPCs().keySet(), new ArrayList<>()
             );
         }
 
