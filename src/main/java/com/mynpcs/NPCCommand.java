@@ -2,18 +2,12 @@
 package com.mynpcs;
 
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class NPCCommand implements CommandExecutor, TabCompleter {
 
@@ -53,19 +47,17 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            String name = args[1];
-
-            if (npcManager.exists(name)) {
+            if (npcManager.exists(args[1])) {
                 player.sendMessage(ChatColor.RED + "NPC already exists!");
                 return true;
             }
 
-            if (npcManager.createNPC(player, name) == null) {
-                player.sendMessage(ChatColor.RED + "NPC creation failed!");
+            if (npcManager.createNPC(player, args[1]) == null) {
+                player.sendMessage(ChatColor.RED + "Creation failed!");
                 return true;
             }
 
-            player.sendMessage(ChatColor.GREEN + "NPC created: " + name);
+            player.sendMessage(ChatColor.GREEN + "NPC created: " + args[1]);
             return true;
         }
 
@@ -84,7 +76,6 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
             }
 
             npc.teleport(player.getLocation());
-
             player.sendMessage(ChatColor.GREEN + "NPC moved!");
             return true;
         }
@@ -103,11 +94,23 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            player.sendMessage(
-                ChatColor.GREEN + "NPC copied: "
-                + ChatColor.YELLOW + copiedName
-            );
+            player.sendMessage(ChatColor.GREEN + "NPC copied: " + copiedName);
+            return true;
+        }
 
+        if (args[0].equalsIgnoreCase("lookme")) {
+
+            if (args.length < 2) {
+                player.sendMessage(ChatColor.RED + "Usage: /npc lookme <name>");
+                return true;
+            }
+
+            if (!npcManager.lookMe(player, args[1])) {
+                player.sendMessage(ChatColor.RED + "NPC not found!");
+                return true;
+            }
+
+            player.sendMessage(ChatColor.GREEN + "NPC is now facing you!");
             return true;
         }
 
@@ -121,6 +124,7 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc create <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc movehere <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc copy <name>");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc lookme <name>");
         player.sendMessage(ChatColor.DARK_PURPLE + "===================");
     }
 
@@ -135,14 +139,14 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             return StringUtil.copyPartialMatches(
                 args[0],
-                Arrays.asList("create", "movehere", "copy"),
+                Arrays.asList("create", "movehere", "copy", "lookme"),
                 new ArrayList<>()
             );
         }
 
         if (args.length == 2 &&
-            (args[0].equalsIgnoreCase("movehere")
-            || args[0].equalsIgnoreCase("copy"))) {
+            Arrays.asList("movehere", "copy", "lookme")
+                .contains(args[0].toLowerCase())) {
 
             return StringUtil.copyPartialMatches(
                 args[1],
