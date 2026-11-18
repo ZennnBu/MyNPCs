@@ -5,9 +5,16 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 
-public class NPCCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class NPCCommand implements CommandExecutor, TabCompleter {
 
     private final NPCManager npcManager;
 
@@ -29,13 +36,12 @@ public class NPCCommand implements CommandExecutor {
         }
 
         if (!player.hasPermission("mynpcs.admin")) {
-            player.sendMessage(ChatColor.RED + "You don't have permission!");
+            player.sendMessage(ChatColor.RED + "No permission!");
             return true;
         }
 
         if (args.length == 0) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "MyNPCs Commands:");
-            player.sendMessage(ChatColor.GRAY + "/npc create <name>");
+            sendHelp(player);
             return true;
         }
 
@@ -52,7 +58,7 @@ public class NPCCommand implements CommandExecutor {
 
             if (npcManager.exists(name)) {
                 player.sendMessage(
-                    ChatColor.RED + "An NPC with this name already exists!"
+                    ChatColor.RED + "NPC already exists!"
                 );
                 return true;
             }
@@ -65,17 +71,39 @@ public class NPCCommand implements CommandExecutor {
             }
 
             player.sendMessage(
-                ChatColor.GREEN + "Successfully created NPC: "
+                ChatColor.GREEN + "NPC created: "
                 + ChatColor.YELLOW + name
             );
 
             return true;
         }
 
-        player.sendMessage(
-            ChatColor.RED + "Unknown command. Use /npc"
-        );
-
+        sendHelp(player);
         return true;
+    }
+
+    private void sendHelp(Player player) {
+        player.sendMessage(ChatColor.DARK_PURPLE + "====== MyNPCs ======");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc create <name>");
+        player.sendMessage(ChatColor.DARK_PURPLE + "===================");
+    }
+
+    @Override
+    public List<String> onTabComplete(
+            CommandSender sender,
+            Command command,
+            String alias,
+            String[] args
+    ) {
+
+        if (args.length == 1) {
+            return StringUtil.copyPartialMatches(
+                args[0],
+                Arrays.asList("create"),
+                new ArrayList<>()
+            );
+        }
+
+        return Collections.emptyList();
     }
 }
