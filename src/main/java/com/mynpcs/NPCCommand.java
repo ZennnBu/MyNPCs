@@ -12,14 +12,19 @@ import java.util.*;
 public class NPCCommand implements CommandExecutor, TabCompleter {
 
     private final NPCManager npcManager;
+    private final NPCSkinManager skinManager;
 
     private static final List<String> COLORS = Arrays.asList(
         "Yellow", "Black", "White", "Purple", "Red",
         "Green", "Blue", "Aqua", "Cyan", "Lime"
     );
 
-    public NPCCommand(NPCManager npcManager) {
+    public NPCCommand(
+        NPCManager npcManager,
+        NPCSkinManager skinManager
+    ) {
         this.npcManager = npcManager;
+        this.skinManager = skinManager;
     }
 
     @Override
@@ -165,6 +170,35 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("skin")) {
+
+            if (args.length < 4) {
+                player.sendMessage(
+                    ChatColor.RED + "Usage: /npc skin <name> <skin>"
+                );
+                return true;
+            }
+
+            player.sendMessage(
+                ChatColor.YELLOW + "Loading skin for " + args[2] + "..."
+            );
+
+            skinManager.setSkin(args[2], args[3], success -> {
+
+                if (success) {
+                    player.sendMessage(
+                        ChatColor.GREEN + "NPC skin updated successfully!"
+                    );
+                } else {
+                    player.sendMessage(
+                        ChatColor.RED + "Could not load skin. Check NPC and skin name."
+                    );
+                }
+            });
+
+            return true;
+        }
+
         sendHelp(player);
         return true;
     }
@@ -177,6 +211,7 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc lookme <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc rename <old> <new>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc glow add <name> <color>");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc skin <name> <skin>");
         player.sendMessage(ChatColor.DARK_PURPLE + "===================");
     }
 
@@ -193,14 +228,14 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
                 args[0],
                 Arrays.asList(
                     "create", "movehere", "copy",
-                    "lookme", "rename", "glow"
+                    "lookme", "rename", "glow", "skin"
                 ),
                 new ArrayList<>()
             );
         }
 
         if (args.length == 2 &&
-            Arrays.asList("movehere", "copy", "lookme", "rename")
+            Arrays.asList("movehere", "copy", "lookme", "rename", "skin")
                 .contains(args[0].toLowerCase())) {
 
             return StringUtil.copyPartialMatches(
