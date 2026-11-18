@@ -13,13 +13,22 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
 
     private final NPCManager npcManager;
 
+    private static final List<String> COLORS = Arrays.asList(
+        "Yellow", "Black", "White", "Purple", "Red",
+        "Green", "Blue", "Aqua", "Cyan", "Lime"
+    );
+
     public NPCCommand(NPCManager npcManager) {
         this.npcManager = npcManager;
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command,
-                             String label, String[] args) {
+    public boolean onCommand(
+        CommandSender sender,
+        Command command,
+        String label,
+        String[] args
+    ) {
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Only players can use this command.");
@@ -116,9 +125,43 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
+            player.sendMessage(ChatColor.GREEN + "NPC renamed to " + args[2]);
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("glow")) {
+
+            if (args.length < 4 ||
+                !args[1].equalsIgnoreCase("add")) {
+
+                player.sendMessage(
+                    ChatColor.RED + "Usage: /npc glow add <name> <color>"
+                );
+                return true;
+            }
+
+            if (!COLORS.stream().anyMatch(
+                color -> color.equalsIgnoreCase(args[3])
+            )) {
+                player.sendMessage(
+                    ChatColor.RED + "Invalid color! Available: "
+                    + String.join(", ", COLORS)
+                );
+                return true;
+            }
+
+            if (!npcManager.addGlow(args[2], args[3])) {
+                player.sendMessage(ChatColor.RED + "NPC not found!");
+                return true;
+            }
+
             player.sendMessage(
-                ChatColor.GREEN + "NPC renamed to " + args[2]
+                ChatColor.GREEN + "Glow applied to "
+                + ChatColor.YELLOW + args[2]
+                + ChatColor.GREEN + " with color "
+                + ChatColor.YELLOW + args[3]
             );
+
             return true;
         }
 
@@ -133,18 +176,25 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc copy <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc lookme <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc rename <old> <new>");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc glow add <name> <color>");
         player.sendMessage(ChatColor.DARK_PURPLE + "===================");
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender,
-                                      Command command, String alias,
-                                      String[] args) {
+    public List<String> onTabComplete(
+        CommandSender sender,
+        Command command,
+        String alias,
+        String[] args
+    ) {
 
         if (args.length == 1) {
             return StringUtil.copyPartialMatches(
                 args[0],
-                Arrays.asList("create", "movehere", "copy", "lookme", "rename"),
+                Arrays.asList(
+                    "create", "movehere", "copy",
+                    "lookme", "rename", "glow"
+                ),
                 new ArrayList<>()
             );
         }
@@ -154,7 +204,37 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
                 .contains(args[0].toLowerCase())) {
 
             return StringUtil.copyPartialMatches(
-                args[1], npcManager.getNPCs().keySet(), new ArrayList<>()
+                args[1],
+                npcManager.getNPCs().keySet(),
+                new ArrayList<>()
+            );
+        }
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("glow")) {
+            return StringUtil.copyPartialMatches(
+                args[1],
+                Collections.singletonList("add"),
+                new ArrayList<>()
+            );
+        }
+
+        if (args.length == 3 && args[0].equalsIgnoreCase("glow")
+            && args[1].equalsIgnoreCase("add")) {
+
+            return StringUtil.copyPartialMatches(
+                args[2],
+                npcManager.getNPCs().keySet(),
+                new ArrayList<>()
+            );
+        }
+
+        if (args.length == 4 && args[0].equalsIgnoreCase("glow")
+            && args[1].equalsIgnoreCase("add")) {
+
+            return StringUtil.copyPartialMatches(
+                args[3],
+                COLORS,
+                new ArrayList<>()
             );
         }
 
