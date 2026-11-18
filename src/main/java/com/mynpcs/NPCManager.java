@@ -18,10 +18,8 @@ public class NPCManager {
 
         if (exists(name)) return null;
 
-        Location location = player.getLocation();
-
-        Mannequin npc = location.getWorld().spawn(
-            location,
+        Mannequin npc = player.getWorld().spawn(
+            player.getLocation(),
             Mannequin.class,
             mannequin -> {
                 mannequin.setCustomName(name);
@@ -42,32 +40,25 @@ public class NPCManager {
 
         Mannequin source = getNPC(sourceName);
 
-        if (source == null || !source.isValid()) {
-            return null;
-        }
+        if (source == null || !source.isValid()) return null;
 
         String copyName = sourceName + "_copy";
         int number = 2;
 
         while (exists(copyName)) {
-            copyName = sourceName + "_copy" + number;
-            number++;
+            copyName = sourceName + "_copy" + number++;
         }
 
-        Location location = player.getLocation();
-
-        Mannequin copy = location.getWorld().spawn(
-            location,
+        Mannequin copy = player.getWorld().spawn(
+            player.getLocation(),
             Mannequin.class,
             mannequin -> {
-
                 mannequin.setCustomName(copyName);
                 mannequin.setCustomNameVisible(true);
                 mannequin.setInvulnerable(source.isInvulnerable());
                 mannequin.setImmovable(source.isImmovable());
                 mannequin.setGravity(source.hasGravity());
                 mannequin.setPersistent(true);
-
                 mannequin.setProfile(source.getProfile());
 
                 copyEquipment(
@@ -78,8 +69,29 @@ public class NPCManager {
         );
 
         npcs.put(copyName.toLowerCase(), copy);
-
         return copyName;
+    }
+
+    public boolean lookMe(Player player, String name) {
+
+        Mannequin npc = getNPC(name);
+
+        if (npc == null || !npc.isValid()) return false;
+
+        Location npcLocation = npc.getLocation();
+        Location playerLocation = player.getLocation();
+
+        Location direction = npcLocation.clone();
+
+        direction.setDirection(
+            playerLocation.toVector().subtract(
+                npcLocation.toVector()
+            )
+        );
+
+        npc.teleport(direction);
+
+        return true;
     }
 
     private void copyEquipment(
@@ -90,9 +102,7 @@ public class NPCManager {
         if (source == null || target == null) return;
 
         target.setArmorContents(cloneItems(source.getArmorContents()));
-
         target.setItemInMainHand(cloneItem(source.getItemInMainHand()));
-
         target.setItemInOffHand(cloneItem(source.getItemInOffHand()));
     }
 
