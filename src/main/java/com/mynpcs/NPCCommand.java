@@ -25,10 +25,10 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(
-            CommandSender sender,
-            Command command,
-            String label,
-            String[] args
+        CommandSender sender,
+        Command command,
+        String label,
+        String[] args
     ) {
 
         if (!(sender instanceof Player player)) {
@@ -85,8 +85,27 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
 
             npc.teleport(player.getLocation());
 
+            player.sendMessage(ChatColor.GREEN + "NPC moved!");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("copy")) {
+
+            if (args.length < 2) {
+                player.sendMessage(ChatColor.RED + "Usage: /npc copy <name>");
+                return true;
+            }
+
+            String copiedName = npcManager.copyNPC(player, args[1]);
+
+            if (copiedName == null) {
+                player.sendMessage(ChatColor.RED + "NPC not found!");
+                return true;
+            }
+
             player.sendMessage(
-                ChatColor.GREEN + "NPC moved: " + ChatColor.YELLOW + args[1]
+                ChatColor.GREEN + "NPC copied: "
+                + ChatColor.YELLOW + copiedName
             );
 
             return true;
@@ -97,30 +116,34 @@ public class NPCCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(Player player) {
+
         player.sendMessage(ChatColor.DARK_PURPLE + "====== MyNPCs ======");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc create <name>");
         player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc movehere <name>");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "/npc copy <name>");
         player.sendMessage(ChatColor.DARK_PURPLE + "===================");
     }
 
     @Override
     public List<String> onTabComplete(
-            CommandSender sender,
-            Command command,
-            String alias,
-            String[] args
+        CommandSender sender,
+        Command command,
+        String alias,
+        String[] args
     ) {
 
         if (args.length == 1) {
             return StringUtil.copyPartialMatches(
                 args[0],
-                Arrays.asList("create", "movehere"),
+                Arrays.asList("create", "movehere", "copy"),
                 new ArrayList<>()
             );
         }
 
         if (args.length == 2 &&
-                args[0].equalsIgnoreCase("movehere")) {
+            (args[0].equalsIgnoreCase("movehere")
+            || args[0].equalsIgnoreCase("copy"))) {
+
             return StringUtil.copyPartialMatches(
                 args[1],
                 npcManager.getNPCs().keySet(),
