@@ -15,7 +15,6 @@ public class NPCManager {
     private final Map<String, Mannequin> npcs = new HashMap<>();
 
     public Mannequin createNPC(Player player, String name) {
-
         if (exists(name)) return null;
 
         Mannequin npc = player.getWorld().spawn(
@@ -37,9 +36,7 @@ public class NPCManager {
     }
 
     public String copyNPC(Player player, String sourceName) {
-
         Mannequin source = getNPC(sourceName);
-
         if (source == null || !source.isValid()) return null;
 
         String copyName = sourceName + "_copy";
@@ -61,10 +58,7 @@ public class NPCManager {
                 mannequin.setPersistent(true);
                 mannequin.setProfile(source.getProfile());
 
-                copyEquipment(
-                    source.getEquipment(),
-                    mannequin.getEquipment()
-                );
+                copyEquipment(source.getEquipment(), mannequin.getEquipment());
             }
         );
 
@@ -73,32 +67,34 @@ public class NPCManager {
     }
 
     public boolean lookMe(Player player, String name) {
-
         Mannequin npc = getNPC(name);
-
         if (npc == null || !npc.isValid()) return false;
 
-        Location npcLocation = npc.getLocation();
-        Location playerLocation = player.getLocation();
-
-        Location direction = npcLocation.clone();
-
+        Location direction = npc.getLocation();
         direction.setDirection(
-            playerLocation.toVector().subtract(
-                npcLocation.toVector()
-            )
+            player.getLocation().toVector().subtract(direction.toVector())
         );
 
         npc.teleport(direction);
+        return true;
+    }
+
+    public boolean renameNPC(String oldName, String newName) {
+        Mannequin npc = getNPC(oldName);
+
+        if (npc == null || !npc.isValid() || exists(newName)) {
+            return false;
+        }
+
+        npcs.remove(oldName.toLowerCase());
+        npc.setCustomName(newName);
+        npc.setCustomNameVisible(true);
+        npcs.put(newName.toLowerCase(), npc);
 
         return true;
     }
 
-    private void copyEquipment(
-        EntityEquipment source,
-        EntityEquipment target
-    ) {
-
+    private void copyEquipment(EntityEquipment source, EntityEquipment target) {
         if (source == null || target == null) return;
 
         target.setArmorContents(cloneItems(source.getArmorContents()));
@@ -107,7 +103,6 @@ public class NPCManager {
     }
 
     private ItemStack[] cloneItems(ItemStack[] items) {
-
         ItemStack[] cloned = new ItemStack[items.length];
 
         for (int i = 0; i < items.length; i++) {
