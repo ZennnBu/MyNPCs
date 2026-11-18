@@ -36,8 +36,8 @@ public class NPCSkinManager {
 
             profile.update().whenComplete((updatedProfile, error) -> {
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    if (error != null || updatedProfile == null
-                        || !updatedProfile.getTextures().isSigned()) {
+
+                    if (error != null || updatedProfile == null) {
                         callback.accept(false);
                         return;
                     }
@@ -47,8 +47,16 @@ public class NPCSkinManager {
                         return;
                     }
 
+                    if (!updatedProfile.getTextures().isSigned()) {
+                        callback.accept(false);
+                        return;
+                    }
+
                     npc.setProfile(
-                        ResolvableProfile.resolvableProfile(updatedProfile)
+                        ResolvableProfile.resolvableProfile(
+                            (com.destroystokyo.paper.profile.PlayerProfile)
+                                updatedProfile
+                        )
                     );
 
                     callback.accept(true);
